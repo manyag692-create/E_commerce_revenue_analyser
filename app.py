@@ -653,26 +653,49 @@ with tab5:
     with col2:
         st.markdown("<span class='section-header'>Country → Product Sunburst</span>", unsafe_allow_html=True)
         top8c  = dff.groupby("Country")["Revenue"].sum().nlargest(8).index.tolist()
-        sun_df = (
-            dff[dff["Country"].isin(top8c)]
-            .groupby(["Country", "Description"])["Revenue"].sum()
-            .reset_index()
-            .groupby("Country", group_keys=False)
-            .apply(lambda x: x.nlargest(3, "Revenue"))
-            .reset_index(drop=True)
-        )
-        fig_sun = px.sunburst(
-            sun_df, path=["Country", "Description"], values="Revenue",
-            color="Revenue", color_continuous_scale=palette
-        )
-        fig_sun.update_layout(
-            paper_bgcolor=PAPER, font_color=FONT_C,
-            margin=dict(l=0, r=0, t=10, b=0), height=380
-        )
-        st.plotly_chart(fig_sun, use_container_width=True)
+        with col2:
+            st.markdown("<span class='section-header'>Country → Product Sunburst</span>", unsafe_allow_html=True)
 
-    with st.expander("📋 Explore Raw Data"):
-        st.dataframe(dff.head(500), use_container_width=True)
+    top8c = dff.groupby("Country")["Revenue"].sum().nlargest(8).index.tolist()
+
+    sun_df = (
+        dff[dff["Country"].isin(top8c)]
+        .copy()
+    )
+
+    # Fix null values
+    sun_df = sun_df.dropna(subset=["Country", "Description", "Revenue"])
+
+    sun_df["Description"] = sun_df["Description"].astype(str)
+    sun_df["Country"] = sun_df["Country"].astype(str)
+
+    sun_df = (
+        sun_df.groupby(["Country", "Description"], as_index=False)["Revenue"]
+        .sum()
+        .groupby("Country", group_keys=False)
+        .apply(lambda x: x.nlargest(3, "Revenue"))
+        .reset_index(drop=True)
+    )
+
+    if len(sun_df) > 0:
+        fig_sun = px.sunburst(
+            sun_df,
+            path=["Country", "Description"],
+            values="Revenue",
+            color="Revenue",
+            color_continuous_scale="Plasma"
+        )
+
+        fig_sun.update_layout(
+            paper_bgcolor=PAPER,
+            font_color=FONT_C,
+            margin=dict(l=0, r=0, t=10, b=0),
+            height=380
+        )
+
+        st.plotly_chart(fig_sun, use_container_width=True)
+    else:
+        st.warning("No valid data available for Sunburst Chart.")
 
 # ══════════════════════════════════════════════
 # TAB 6 – RF PREDICTOR
