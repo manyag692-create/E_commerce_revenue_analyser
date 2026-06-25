@@ -6,9 +6,6 @@ import plotly.graph_objects as go
 import warnings
 warnings.filterwarnings("ignore")
 
-# ─────────────────────────────────────────────
-# PAGE CONFIG
-# ─────────────────────────────────────────────
 st.set_page_config(
     page_title="Retail Intelligence Hub",
     page_icon="🛍️",
@@ -16,9 +13,6 @@ st.set_page_config(
     initial_sidebar_state="expanded",
 )
 
-# ─────────────────────────────────────────────
-# DARK THEME CSS
-# ─────────────────────────────────────────────
 st.markdown("""
 <style>
 html, body, [class*="css"], .main, .block-container {
@@ -159,9 +153,7 @@ header[data-testid="stHeader"] { background: transparent !important; }
 </style>
 """, unsafe_allow_html=True)
 
-# ─────────────────────────────────────────────
-# CONSTANTS
-# ─────────────────────────────────────────────
+
 BG     = "#0d0d1a"
 PAPER  = "#0d0d1a"
 GRID   = "rgba(255,255,255,0.07)"
@@ -192,9 +184,6 @@ def dark_layout(height=400, extra_xaxis=None, extra_yaxis=None, **kwargs):
     layout.update(kwargs)
     return layout
 
-# ─────────────────────────────────────────────
-# DATA LOADING
-# ─────────────────────────────────────────────
 @st.cache_data
 def load_data():
     df = pd.read_csv("data.csv", encoding="latin1")
@@ -206,9 +195,6 @@ def load_data():
     df = df[(df["Quantity"] > 0) & (df["UnitPrice"] > 0)]
     return df
 
-# ─────────────────────────────────────────────
-# RF MODEL  — trained fresh on actual data
-# ─────────────────────────────────────────────
 @st.cache_resource
 def train_rf(df):
     from sklearn.ensemble import RandomForestRegressor
@@ -231,9 +217,6 @@ rf_model, label_enc = train_rf(df)
 
 ALL_COUNTRIES = sorted(df["Country"].unique().tolist())
 
-# ─────────────────────────────────────────────
-# SIDEBAR  — unique widget keys throughout
-# ─────────────────────────────────────────────
 with st.sidebar:
     st.markdown("## 🎛️ Control Panel")
     st.markdown("---")
@@ -286,18 +269,14 @@ with st.sidebar:
         unsafe_allow_html=True
     )
 
-# ─────────────────────────────────────────────
-# FILTER DATA
-# ─────────────────────────────────────────────
+
 dff = df.copy()
 if sel_country != "All":
     dff = dff[dff["Country"] == sel_country]
 dff = dff[(dff["Month"] >= sel_months[0]) & (dff["Month"] <= sel_months[1])]
 dff = dff[(dff["Revenue"] >= rev_range[0]) & (dff["Revenue"] <= rev_range[1])]
 
-# ─────────────────────────────────────────────
-# HERO BANNER
-# ─────────────────────────────────────────────
+
 st.markdown("""
 <div class='hero-banner'>
   <p class='hero-title'>🛍️ Retail Intelligence Hub</p>
@@ -310,9 +289,6 @@ if dff.empty:
     st.warning("⚠️ No data matches the current filters. Please adjust the sidebar controls.")
     st.stop()
 
-# ─────────────────────────────────────────────
-# KPI ROW
-# ─────────────────────────────────────────────
 total_rev       = dff["Revenue"].sum()
 total_orders    = dff["InvoiceNo"].nunique()
 total_customers = dff["CustomerID"].nunique()
@@ -329,9 +305,7 @@ with k5: st.metric("🌍 Top Market",       top_country)
 
 st.markdown("<br>", unsafe_allow_html=True)
 
-# ─────────────────────────────────────────────
-# TABS
-# ─────────────────────────────────────────────
+
 tab1, tab2, tab3, tab4, tab5, tab6 = st.tabs([
     "📈 Revenue & Trends",
     "🌐 3D Globe & Geo",
@@ -341,9 +315,7 @@ tab1, tab2, tab3, tab4, tab5, tab6 = st.tabs([
     "🤖 RF Predictor",
 ])
 
-# ══════════════════════════════════════════════
-# TAB 1 – Revenue & Trends
-# ══════════════════════════════════════════════
+
 with tab1:
     col1, col2 = st.columns([2, 1])
 
@@ -397,9 +369,6 @@ with tab1:
     fig3.update_layout(**dark_layout(height=380))
     st.plotly_chart(fig3, use_container_width=True)
 
-# ══════════════════════════════════════════════
-# TAB 2 – 3D Globe & Geo
-# ══════════════════════════════════════════════
 with tab2:
     st.markdown("<span class='section-header'>🌍 Global Revenue — Rotating Globe</span>", unsafe_allow_html=True)
     country_rev = dff.groupby("Country").agg(
@@ -472,9 +441,6 @@ with tab2:
         )
         st.plotly_chart(fig_pie, use_container_width=True)
 
-# ══════════════════════════════════════════════
-# TAB 3 – 3D Analysis
-# ══════════════════════════════════════════════
 with tab3:
     st.markdown("<span class='section-header'>🔮 3D Revenue Landscape — Country × Month × Revenue</span>", unsafe_allow_html=True)
 
@@ -537,9 +503,6 @@ with tab3:
         )
         st.plotly_chart(fig3d_b, use_container_width=True)
 
-# ══════════════════════════════════════════════
-# TAB 4 – Time Intelligence
-# ══════════════════════════════════════════════
 with tab4:
     st.markdown("<span class='section-header'>⏱️ Sales Heatmap — Day × Hour</span>", unsafe_allow_html=True)
     day_order  = ["Monday","Tuesday","Wednesday","Thursday","Friday","Saturday","Sunday"]
@@ -609,9 +572,6 @@ with tab4:
     )
     st.plotly_chart(fig_funnel, use_container_width=True)
 
-# ══════════════════════════════════════════════
-# TAB 5 – Top Products
-# ══════════════════════════════════════════════
 with tab5:
     st.markdown("<span class='section-header'>🏆 Top 20 Products by Revenue</span>", unsafe_allow_html=True)
     top_prod = (
@@ -652,54 +612,45 @@ with tab5:
 
     with col2:
         st.markdown("<span class='section-header'>Country → Product Sunburst</span>", unsafe_allow_html=True)
-        top8c  = dff.groupby("Country")["Revenue"].sum().nlargest(8).index.tolist()
-        with col2:
-            st.markdown("<span class='section-header'>Country → Product Sunburst</span>", unsafe_allow_html=True)
-
-    top8c = dff.groupby("Country")["Revenue"].sum().nlargest(8).index.tolist()
-
-    sun_df = (
-        dff[dff["Country"].isin(top8c)]
-        .copy()
-    )
-
-    # Fix null values
-    sun_df = sun_df.dropna(subset=["Country", "Description", "Revenue"])
-
-    sun_df["Description"] = sun_df["Description"].astype(str)
-    sun_df["Country"] = sun_df["Country"].astype(str)
-
-    sun_df = (
-        sun_df.groupby(["Country", "Description"], as_index=False)["Revenue"]
-        .sum()
-        .groupby("Country", group_keys=False)
-        .apply(lambda x: x.nlargest(3, "Revenue"))
-        .reset_index(drop=True)
-    )
-
-    if len(sun_df) > 0:
-        fig_sun = px.sunburst(
-            sun_df,
-            path=["Country", "Description"],
-            values="Revenue",
-            color="Revenue",
-            color_continuous_scale="Plasma"
+        top8c = dff.groupby("Country")["Revenue"].sum().nlargest(8).index.tolist()
+        sun_df = (
+            dff[dff["Country"].isin(top8c)]
+            .groupby(["Country", "Description"])["Revenue"].sum()
+            .reset_index()
+            .groupby("Country", group_keys=False)
+            .apply(lambda x: x.nlargest(3, "Revenue"))
+            .reset_index(drop=True)
         )
+        # Sunburst needs at least 2 countries and non-zero revenue rows
+        if len(sun_df["Country"].unique()) >= 2 and len(sun_df) > 0 and sun_df["Revenue"].sum() > 0:
+            fig_sun = px.sunburst(
+                sun_df, path=["Country", "Description"], values="Revenue",
+                color="Revenue", color_continuous_scale=palette
+            )
+            fig_sun.update_layout(
+                paper_bgcolor=PAPER, font_color=FONT_C,
+                margin=dict(l=0, r=0, t=10, b=0), height=380
+            )
+            st.plotly_chart(fig_sun, use_container_width=True)
+        else:
+            # Fallback: simple horizontal bar when only 1 country is in view
+            fallback = sun_df.nlargest(10, "Revenue") if not sun_df.empty else dff.groupby("Description")["Revenue"].sum().nlargest(10).reset_index()
+            fig_fb = px.bar(
+                fallback, x="Revenue", y="Description", orientation="h",
+                color="Revenue", color_continuous_scale=palette,
+                text=fallback["Revenue"].apply(lambda x: f"£{x/1000:.1f}k")
+            )
+            fig_fb.update_layout(**dark_layout(
+                height=380, coloraxis_showscale=False,
+                extra_yaxis=dict(title="", autorange="reversed", showgrid=False),
+                extra_xaxis=dict(title="Revenue (£)")
+            ))
+            fig_fb.update_traces(textposition="outside", textfont=dict(color=FONT_C))
+            st.plotly_chart(fig_fb, use_container_width=True)
 
-        fig_sun.update_layout(
-            paper_bgcolor=PAPER,
-            font_color=FONT_C,
-            margin=dict(l=0, r=0, t=10, b=0),
-            height=380
-        )
+    with st.expander("📋 Explore Raw Data"):
+        st.dataframe(dff.head(500), use_container_width=True)
 
-        st.plotly_chart(fig_sun, use_container_width=True)
-    else:
-        st.warning("No valid data available for Sunburst Chart.")
-
-# ══════════════════════════════════════════════
-# TAB 6 – RF PREDICTOR
-# ══════════════════════════════════════════════
 with tab6:
     st.markdown("<span class='section-header'>🤖 Random Forest Revenue Predictor</span>", unsafe_allow_html=True)
 
@@ -851,9 +802,7 @@ with tab6:
     ))
     st.plotly_chart(fig_p, use_container_width=True)
 
-# ─────────────────────────────────────────────
-# FOOTER
-# ─────────────────────────────────────────────
+
 st.markdown("""
 <div class='footer'>
   🛍️ Retail Intelligence Hub · Dark Edition ·
